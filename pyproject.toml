@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "homework 14"
+version = "0.1.0"
+description = ""
+authors = ["Даниил Чернышов <Dan24012004@yandex.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+pytest = "^8.4.1"
+
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.3.0"
+black = "^25.1.0"
+mypy = "^1.17.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
