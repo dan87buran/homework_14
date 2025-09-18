@@ -10,7 +10,7 @@ class Product:
 
 
 class Category:
-    total_categories = 0
+    total_categories = 1
     total_products = 0
 
     def __init__(self, name: str, description: str, products: list):
