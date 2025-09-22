@@ -1,11 +1,37 @@
-# .gitignore
-__pycache__/
-*.pyc
+# Virtual environment
 .venv/
 venv/
 env/
-.idea/
+ENV/
+
+# IDE
 .vscode/
-*.egg-info/
-dist/
-build/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+
+# Coverage reports
+# ИСКЛЮЧАЕМ htmlcov из игнорирования для отчета о покрытии
+# htmlcov/
+.coverage
+.coverage.*
+*.cover
+.pytest_cache/
+
+# Poetry
+poetry.lock
+
+# Logs
+*.log
