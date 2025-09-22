@@ -1,20 +1,35 @@
 [tool.poetry]
-name = "homework 14"
+name = "ecommerce-core"
 version = "0.1.0"
-description = ""
-authors = ["Даниил Чернышов <Dan24012004@yandex.ru>"]
-readme = "README.md"
+description = "Ядро интернет-магазина на ООП"
+authors = ["Ваше Имя <your.email@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.13"
-pytest = "^8.4.1"
-
+python = "^3.8"
 
 [tool.poetry.group.dev.dependencies]
-flake8 = "^7.3.0"
-black = "^25.1.0"
-mypy = "^1.17.1"
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+flake8 = "^6.0.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/test_*", "*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError"
+]
