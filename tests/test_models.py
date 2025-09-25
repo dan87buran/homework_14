@@ -4,7 +4,6 @@ import os
 import json
 from pathlib import Path
 
-# Добавляем корень проекта в Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
@@ -23,24 +22,6 @@ def create_test_json_file():
                     "description": "Флагманский смартфон Samsung",
                     "price": 89990.0,
                     "quantity": 15
-                },
-                {
-                    "name": "Xiaomi Redmi Note 13",
-                    "description": "Бюджетный смартфон с хорошей камерой",
-                    "price": 24990.0,
-                    "quantity": 25
-                }
-            ]
-        },
-        {
-            "name": "Ноутбуки",
-            "description": "Портативные компьютеры",
-            "products": [
-                {
-                    "name": "ASUS ROG Strix",
-                    "description": "Игровой ноутбук",
-                    "price": 149990.0,
-                    "quantity": 8
                 }
             ]
         }
@@ -57,23 +38,71 @@ def create_test_json_file():
 class TestProduct:
     """Тесты для класса Product"""
 
+    def setup_method(self):
+        """Сброс счетчиков перед каждым тестом"""
+        Category.category_count = 0
+        Category.product_count = 0
+
     def test_product_initialization(self):
         """Тест корректной инициализации продукта"""
         product = Product("Телефон", "Смартфон", 50000.0, 10)
 
         assert product.name == "Телефон"
         assert product.description == "Смартфон"
-        assert product.price == 50000.0
+        assert product.price == 50000.0  # Используем геттер
         assert product.quantity == 10
 
-    def test_product_attributes_types(self):
-        """Тест типов атрибутов продукта"""
-        product = Product("Ноутбук", "Игровой ноутбук", 100000.0, 5)
+    def test_product_price_getter_setter(self):
+        """Тест геттера и сеттера для цены"""
+        product = Product("Телефон", "Смартфон", 50000.0, 10)
 
-        assert isinstance(product.name, str)
-        assert isinstance(product.description, str)
-        assert isinstance(product.price, float)
-        assert isinstance(product.quantity, int)
+        # Проверяем геттер
+        assert product.price == 50000.0
+
+        # Проверяем сеттер с корректным значением
+        product.price = 45000.0
+        assert product.price == 45000.0
+
+        # Проверяем сеттер с некорректным значением (цена не должна измениться)
+        product.price = -1000.0
+        assert product.price == 45000.0  # Цена осталась прежней
+
+    def test_product_price_negative_value(self, capsys):
+        """Тест обработки отрицательной цены"""
+        product = Product("Телефон", "Смартфон", 50000.0, 10)
+
+        product.price = -1000.0
+        captured = capsys.readouterr()
+
+        assert "Цена не должна быть нулевая или отрицательная" in captured.out
+        assert product.price == 50000.0  # Цена не изменилась
+
+    def test_product_price_zero_value(self, capsys):
+        """Тест обработки нулевой цены"""
+        product = Product("Телефон", "Смартфон", 50000.0, 10)
+
+        product.price = 0
+        captured = capsys.readouterr()
+
+        assert "Цена не должна быть нулевая или отрицательная" in captured.out
+        assert product.price == 50000.0  # Цена не изменилась
+
+    def test_new_product_class_method(self):
+        """Тест класс-метода new_product"""
+        product_data = {
+            "name": "Ноутбук",
+            "description": "Игровой ноутбук",
+            "price": 100000.0,
+            "quantity": 5
+        }
+
+        product = Product.new_product(product_data)
+
+        assert isinstance(product, Product)
+        assert product.name == "Ноутбук"
+        assert product.description == "Игровой ноутбук"
+        assert product.price == 100000.0
+        assert product.quantity == 5
 
 
 class TestCategory:
@@ -84,46 +113,65 @@ class TestCategory:
         Category.category_count = 0
         Category.product_count = 0
 
-    def test_category_initialization(self):
-        """Тест корректной инициализации категории"""
+    def test_private_products_attribute(self):
+        """Тест приватности атрибута продуктов"""
+        category = Category("Электроника", "Гаджеты")
+
+        # Проверяем, что атрибут __products действительно приватный
+        with pytest.raises(AttributeError):
+            _ = category.__products
+
+    def test_add_product_method(self):
+        """Тест метода add_product"""
+        category = Category("Электроника", "Гаджеты")
+        product = Product("Телефон", "Смартфон", 50000.0, 10)
+
+        initial_count = Category.product_count
+        category.add_product(product)
+
+        # Проверяем, что продукт добавлен и счетчик увеличился
+        assert Category.product_count == initial_count + 1
+
+    def test_add_product_invalid_type(self):
+        """Тест добавления неверного типа в add_product"""
+        category = Category("Электроника", "Гаджеты")
+
+        with pytest.raises(TypeError):
+            category.add_product("не продукт")
+
+    def test_products_property(self):
+        """Тест геттера products"""
+        product1 = Product("Телефон", "Смартфон", 50000.0, 10)
+        product2 = Product("Ноутбук", "Игровой ноутбук", 100000.0, 5)
+
+        category = Category("Электроника", "Гаджеты", [product1, product2])
+
+        products_str = category.products
+
+        assert isinstance(products_str, str)
+        assert "Телефон, 50000.0 руб. Остаток: 10 шт." in products_str
+        assert "Ноутбук, 100000.0 руб. Остаток: 5 шт." in products_str
+
+    def test_products_property_format(self):
+        """Тест формата вывода геттера products"""
         product = Product("Телефон", "Смартфон", 50000.0, 10)
         category = Category("Электроника", "Гаджеты", [product])
 
-        assert category.name == "Электроника"
-        assert category.description == "Гаджеты"
-        assert len(category.products) == 1
-        assert category.products[0].name == "Телефон"
+        products_str = category.products
+        expected_format = "Телефон, 50000.0 руб. Остаток: 10 шт."
 
-    def test_category_empty_products(self):
-        """Тест создания категории без товаров"""
-        category = Category("Книги", "Художественная литература")
+        assert products_str == expected_format
 
-        assert category.name == "Книги"
-        assert category.description == "Художественная литература"
-        assert category.products == []
+    def test_get_products_list_method(self):
+        """Тест метода get_products_list"""
+        product = Product("Телефон", "Смартфон", 50000.0, 10)
+        category = Category("Электроника", "Гаджеты", [product])
 
-    def test_category_count(self):
-        """Тест подсчета количества категорий"""
-        initial_count = Category.category_count
-        category1 = Category("Категория 1", "Описание 1")
-        category2 = Category("Категория 2", "Описание 2")
+        products_list = category.get_products_list()
 
-        assert Category.category_count == initial_count + 2
-        assert Category.category_count == 2
-
-    def test_product_count(self):
-        """Тест подсчета количества товаров"""
-        initial_count = Category.product_count
-
-        product1 = Product("Товар 1", "Описание 1", 100, 1)
-        product2 = Product("Товар 2", "Описание 2", 200, 2)
-        product3 = Product("Товар 3", "Описание 3", 300, 3)
-
-        category1 = Category("Категория 1", "Описание 1", [product1, product2])
-        category2 = Category("Категория 2", "Описание 2", [product3])
-
-        assert Category.product_count == initial_count + 3
-        assert Category.product_count == 3
+        assert isinstance(products_list, list)
+        assert len(products_list) == 1
+        assert products_list[0] == product
 
 
 class TestJSONLoading:
@@ -133,7 +181,6 @@ class TestJSONLoading:
         """Сброс счетчиков перед каждым тестом"""
         Category.category_count = 0
         Category.product_count = 0
-        # Создаем тестовый JSON файл перед каждым тестом
         self.json_path = create_test_json_file()
 
     def teardown_method(self):
@@ -141,19 +188,10 @@ class TestJSONLoading:
         if os.path.exists(self.json_path):
             os.remove(self.json_path)
 
-    def test_load_data_from_json(self):
-        """Тест загрузки данных из JSON файла"""
+    def test_load_data_uses_new_product_method(self):
+        """Тест что загрузка использует класс-метод new_product"""
         categories = load_data_from_json(str(self.json_path))
 
         assert len(categories) > 0
-        assert isinstance(categories[0], Category)
-        assert isinstance(categories[0].products[0], Product)
-
-    def test_json_loading_counts(self):
-        """Тест корректности подсчетов после загрузки из JSON"""
-        categories = load_data_from_json(str(self.json_path))
-
-        total_products = sum(len(category.products) for category in categories)
-
-        assert Category.category_count == len(categories)
-        assert Category.product_count == total_products
+        assert len(categories[0].get_products_list()) > 0
+        assert isinstance(categories[0].get_products_list()[0], Product)

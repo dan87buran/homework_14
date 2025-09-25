@@ -6,8 +6,39 @@ class Product:
     def __init__(self, name: str, description: str, price: float, quantity: int):
         self.name = name
         self.description = description
-        self.price = price
+        self._price = price  # Приватный атрибут цены
         self.quantity = quantity
+
+    @property
+    def price(self):
+        """Геттер для цены"""
+        return self._price
+
+    @price.setter
+    def price(self, new_price: float):
+        """Сеттер для цены с проверкой на положительное значение"""
+        if new_price <= 0:
+            print("Цена не должна быть нулевая или отрицательная")
+        else:
+            self._price = new_price
+
+    @classmethod
+    def new_product(cls, product_data: dict):
+        """
+        Класс-метод для создания нового продукта из словаря
+
+        Args:
+            product_data (dict): Словарь с данными продукта
+
+        Returns:
+            Product: Новый объект продукта
+        """
+        return cls(
+            name=product_data['name'],
+            description=product_data['description'],
+            price=product_data['price'],
+            quantity=product_data['quantity']
+        )
 
 
 class Category:
@@ -21,11 +52,36 @@ class Category:
     def __init__(self, name: str, description: str, products: list = None):
         self.name = name
         self.description = description
-        self.products = products if products is not None else []
+        self.__products = products if products is not None else []  # Приватный атрибут
 
         # Обновляем атрибуты класса
         Category.category_count += 1
-        Category.product_count += len(self.products)
+        Category.product_count += len(self.__products)
+
+    def add_product(self, product):
+        """
+        Метод для добавления продукта в категорию
+
+        Args:
+            product (Product): Объект продукта для добавления
+        """
+        if isinstance(product, Product):
+            self.__products.append(product)
+            Category.product_count += 1
+        else:
+            raise TypeError("Можно добавлять только объекты класса Product")
+
+    @property
+    def products(self):
+        """Геттер для списка продуктов в формате строк"""
+        products_str = ""
+        for product in self.__products:
+            products_str += f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.\n"
+        return products_str.strip()
+
+    def get_products_list(self):
+        """Метод для получения списка объектов продуктов (для внутреннего использования)"""
+        return self.__products
 
 
 def load_data_from_json(filename: str = "products.json"):
@@ -33,11 +89,9 @@ def load_data_from_json(filename: str = "products.json"):
     Загружает данные о категориях и товарах из JSON-файла.
     """
     import json
-    import os
     from pathlib import Path
 
     try:
-        # Получаем абсолютный путь к файлу
         file_path = Path(filename)
         if not file_path.is_absolute():
             file_path = Path(__file__).parent.parent / filename
@@ -59,12 +113,7 @@ def load_data_from_json(filename: str = "products.json"):
     for category_data in data:
         products = []
         for product_data in category_data.get('products', []):
-            product = Product(
-                name=product_data['name'],
-                description=product_data['description'],
-                price=product_data['price'],
-                quantity=product_data['quantity']
-            )
+            product = Product.new_product(product_data)
             products.append(product)
 
         category = Category(
