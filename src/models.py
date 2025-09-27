@@ -6,8 +6,22 @@ class Product:
     def __init__(self, name: str, description: str, price: float, quantity: int):
         self.name = name
         self.description = description
-        self._price = price  # Приватный атрибут цены
+        self._price = price
         self.quantity = quantity
+
+    def __str__(self):
+        """Строковое представление продукта"""
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __add__(self, other):
+        """
+        Магический метод сложения продуктов.
+        Возвращает сумму стоимости всех товаров на складе.
+        """
+        if not isinstance(other, Product):
+            raise TypeError("Можно складывать только объекты класса Product")
+
+        return (self.price * self.quantity) + (other.price * other.quantity)
 
     @property
     def price(self):
@@ -26,12 +40,6 @@ class Product:
     def new_product(cls, product_data: dict):
         """
         Класс-метод для создания нового продукта из словаря
-
-        Args:
-            product_data (dict): Словарь с данными продукта
-
-        Returns:
-            Product: Новый объект продукта
         """
         return cls(
             name=product_data['name'],
@@ -52,18 +60,19 @@ class Category:
     def __init__(self, name: str, description: str, products: list = None):
         self.name = name
         self.description = description
-        self.__products = products if products is not None else []  # Приватный атрибут
+        self.__products = products if products is not None else []
 
-        # Обновляем атрибуты класса
         Category.category_count += 1
         Category.product_count += len(self.__products)
+
+    def __str__(self):
+        """Строковое представление категории"""
+        total_quantity = sum(product.quantity for product in self.__products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
 
     def add_product(self, product):
         """
         Метод для добавления продукта в категорию
-
-        Args:
-            product (Product): Объект продукта для добавления
         """
         if isinstance(product, Product):
             self.__products.append(product)
@@ -76,12 +85,16 @@ class Category:
         """Геттер для списка продуктов в формате строк"""
         products_str = ""
         for product in self.__products:
-            products_str += f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.\n"
+            products_str += f"{product}\n"  # Используем __str__ продукта
         return products_str.strip()
 
     def get_products_list(self):
-        """Метод для получения списка объектов продуктов (для внутреннего использования)"""
+        """Метод для получения списка объектов продуктов"""
         return self.__products
+
+    def get_total_quantity(self):
+        """Метод для получения общего количества товаров в категории"""
+        return sum(product.quantity for product in self.__products)
 
 
 def load_data_from_json(filename: str = "products.json"):

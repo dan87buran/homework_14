@@ -2,71 +2,48 @@ from src.models import Product, Category, load_data_from_json
 from pathlib import Path
 
 
-def demonstrate_private_attributes():
-    """Демонстрация работы с приватными атрибутами"""
-    print("=== Демонстрация приватных атрибутов и методов ===\n")
-
-    # Сброс счетчиков
-    Category.category_count = 0
-    Category.product_count = 0
+def demonstrate_str_methods():
+    """Демонстрация строковых представлений"""
+    print("=== Демонстрация строковых представлений ===\n")
 
     # Создание продуктов
     phone = Product("iPhone 15", "Смартфон Apple", 99990.0, 5)
     laptop = Product("MacBook Pro", "Ноутбук Apple", 199990.0, 3)
 
-    # Создание категории и добавление продуктов через метод
-    electronics = Category("Электроника", "Техника Apple")
-    electronics.add_product(phone)
-    electronics.add_product(laptop)
+    print("Строковое представление продуктов:")
+    print(f"Продукт 1: {phone}")
+    print(f"Продукт 2: {laptop}")
 
-    print("Демонстрация геттера products:")
-    print(electronics.products)
+    # Создание категории
+    electronics = Category("Электроника", "Техника Apple", [phone, laptop])
 
-    print(f"\nОбщее количество категорий: {Category.category_count}")
-    print(f"Общее количество товаров: {Category.product_count}")
-
-
-def demonstrate_price_validation():
-    """Демонстрация валидации цены"""
-    print("\n=== Демонстрация валидации цены ===\n")
-
-    product = Product("Тестовый товар", "Пример", 1000.0, 10)
-    print(f"Исходная цена: {product.price}")
-
-    # Попытка установить отрицательную цену
-    print("Пытаемся установить отрицательную цену...")
-    product.price = -500.0
-    print(f"Цена после попытки установки отрицательного значения: {product.price}")
-
-    # Установка корректной цены
-    product.price = 1500.0
-    print(f"Цена после установки корректного значения: {product.price}")
+    print(f"\nСтроковое представление категории: {electronics}")
+    print(f"Общее количество товаров: {electronics.get_total_quantity()}")
 
 
-def demonstrate_class_method():
-    """Демонстрация класс-метода"""
-    print("\n=== Демонстрация класс-метода new_product ===\n")
+def demonstrate_addition_method():
+    """Демонстрация сложения продуктов"""
+    print("\n=== Демонстрация сложения продуктов ===\n")
 
-    product_data = {
-        "name": "Созданный через класс-метод",
-        "description": "Товар созданный из словаря",
-        "price": 50000.0,
-        "quantity": 7
-    }
+    # Создание продуктов
+    product1 = Product("Телефон", "Смартфон", 50000.0, 10)
+    product2 = Product("Ноутбук", "Игровой ноутбук", 100000.0, 5)
 
-    product = Product.new_product(product_data)
-    print(f"Создан продукт: {product.name}")
-    print(f"Цена: {product.price} руб.")
-    print(f"В наличии: {product.quantity} шт.")
+    print(f"Продукт 1: {product1}")
+    print(f"Продукт 2: {product2}")
+
+    # Сложение продуктов
+    total_value = product1 + product2
+    print(f"\nСуммарная стоимость товаров на складе: {total_value} руб.")
+
+    # Демонстрация расчета
+    calculation = f"({product1.price} × {product1.quantity}) + ({product2.price} × {product2.quantity}) = {total_value}"
+    print(f"Расчет: {calculation}")
 
 
 def demonstrate_json_loading():
     """Демонстрация загрузки из JSON"""
     print("\n=== Демонстрация загрузки из JSON ===\n")
-
-    # Сброс счетчиков
-    Category.category_count = 0
-    Category.product_count = 0
 
     # Проверяем существование файла
     json_path = Path("products.json")
@@ -81,15 +58,22 @@ def demonstrate_json_loading():
         return
 
     for category in categories:
-        print(f"Категория: {category.name}")
-        print(f"Описание: {category.description}")
+        print(f"Категория: {category}")
         print("Товары:")
         print(category.products)
         print()
 
 
-if __name__ == "__main__":
-    demonstrate_private_attributes()
-    demonstrate_price_validation()
-    demonstrate_class_method()
+def demonstrate_all_features():
+    """Демонстрация всех новых функций"""
+    print("=" * 50)
+    print("ДЕМОНСТРАЦИЯ МАГИЧЕСКИХ МЕТОДОВ")
+    print("=" * 50)
+
+    demonstrate_str_methods()
+    demonstrate_addition_method()
     demonstrate_json_loading()
+
+
+if __name__ == "__main__":
+    demonstrate_all_features()
