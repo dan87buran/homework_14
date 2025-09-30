@@ -1,6 +1,6 @@
 class Product:
     """
-    Класс для представления товара в интернет-магазине.
+    Базовый класс для представления товара в интернет-магазине.
     """
 
     def __init__(self, name: str, description: str, price: float, quantity: int):
@@ -18,8 +18,8 @@ class Product:
         Магический метод сложения продуктов.
         Возвращает сумму стоимости всех товаров на складе.
         """
-        if not isinstance(other, Product):
-            raise TypeError("Можно складывать только объекты класса Product")
+        if type(self) != type(other):
+            raise TypeError("Нельзя складывать товары разных типов")
 
         return (self.price * self.quantity) + (other.price * other.quantity)
 
@@ -49,6 +49,45 @@ class Product:
         )
 
 
+class Smartphone(Product):
+    """
+    Класс для представления смартфона.
+    Наследуется от класса Product.
+    """
+
+    def __init__(self, name: str, description: str, price: float, quantity: int,
+                 efficiency: float, model: str, memory: int, color: str):
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency  # производительность
+        self.model = model  # модель
+        self.memory = memory  # объем встроенной памяти (ГБ)
+        self.color = color  # цвет
+
+    def __str__(self):
+        """Строковое представление смартфона"""
+        return (f"{self.name} {self.model}, {self.price} руб. Остаток: {self.quantity} шт.\n"
+                f"Характеристики: {self.memory}ГБ, {self.color}, производительность: {self.efficiency}")
+
+
+class LawnGrass(Product):
+    """
+    Класс для представления газонной травы.
+    Наследуется от класса Product.
+    """
+
+    def __init__(self, name: str, description: str, price: float, quantity: int,
+                 country: str, germination_period: int, color: str):
+        super().__init__(name, description, price, quantity)
+        self.country = country  # страна-производитель
+        self.germination_period = germination_period  # срок прорастания (дни)
+        self.color = color  # цвет
+
+    def __str__(self):
+        """Строковое представление газонной травы"""
+        return (f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт.\n"
+                f"Характеристики: {self.country}, срок прорастания: {self.germination_period} дней, цвет: {self.color}")
+
+
 class Category:
     """
     Класс для представления категории товаров в интернет-магазине.
@@ -72,13 +111,14 @@ class Category:
 
     def add_product(self, product):
         """
-        Метод для добавления продукта в категорию
+        Метод для добавления продукта в категорию.
+        Проверяет, что добавляемый объект является продуктом или его наследником.
         """
-        if isinstance(product, Product):
-            self.__products.append(product)
-            Category.product_count += 1
-        else:
-            raise TypeError("Можно добавлять только объекты класса Product")
+        if not isinstance(product, Product):
+            raise TypeError("Можно добавлять только объекты класса Product или его наследников")
+
+        self.__products.append(product)
+        Category.product_count += 1
 
     @property
     def products(self):
@@ -126,7 +166,31 @@ def load_data_from_json(filename: str = "products.json"):
     for category_data in data:
         products = []
         for product_data in category_data.get('products', []):
-            product = Product.new_product(product_data)
+            # Определяем тип продукта на основе дополнительных полей
+            if 'efficiency' in product_data and 'model' in product_data:
+                product = Smartphone(
+                    name=product_data['name'],
+                    description=product_data['description'],
+                    price=product_data['price'],
+                    quantity=product_data['quantity'],
+                    efficiency=product_data['efficiency'],
+                    model=product_data['model'],
+                    memory=product_data['memory'],
+                    color=product_data['color']
+                )
+            elif 'country' in product_data and 'germination_period' in product_data:
+                product = LawnGrass(
+                    name=product_data['name'],
+                    description=product_data['description'],
+                    price=product_data['price'],
+                    quantity=product_data['quantity'],
+                    country=product_data['country'],
+                    germination_period=product_data['germination_period'],
+                    color=product_data['color']
+                )
+            else:
+                product = Product.new_product(product_data)
+
             products.append(product)
 
         category = Category(

@@ -1,78 +1,103 @@
-from src.models import Product, Category, load_data_from_json
+from src.models import Product, Smartphone, LawnGrass, Category, load_data_from_json
 from pathlib import Path
 
 
-def demonstrate_str_methods():
-    """Демонстрация строковых представлений"""
-    print("=== Демонстрация строковых представлений ===\n")
+def demonstrate_inheritance():
+    """Демонстрация классов-наследников"""
+    print("=== Демонстрация классов-наследников ===\n")
 
-    # Создание продуктов
-    phone = Product("iPhone 15", "Смартфон Apple", 99990.0, 5)
-    laptop = Product("MacBook Pro", "Ноутбук Apple", 199990.0, 3)
+    # Создание смартфона
+    smartphone = Smartphone(
+        name="iPhone 15 Pro",
+        description="Флагманский смартфон Apple",
+        price=129990.0,
+        quantity=8,
+        efficiency=3.5,
+        model="15 Pro",
+        memory=512,
+        color="титан"
+    )
 
-    print("Строковое представление продуктов:")
-    print(f"Продукт 1: {phone}")
-    print(f"Продукт 2: {laptop}")
+    print("Смартфон:")
+    print(smartphone)
+    print(f"\nТип: {type(smartphone)}")
+    print(f"Является ли Product: {isinstance(smartphone, Product)}")
 
-    # Создание категории
-    electronics = Category("Электроника", "Техника Apple", [phone, laptop])
+    # Создание газонной травы
+    lawn_grass = LawnGrass(
+        name="Газонная трава Премиум",
+        description="Высококачественная газонная трава",
+        price=2500.0,
+        quantity=50,
+        country="Германия",
+        germination_period=12,
+        color="изумрудный"
+    )
 
-    print(f"\nСтроковое представление категории: {electronics}")
-    print(f"Общее количество товаров: {electronics.get_total_quantity()}")
-
-
-def demonstrate_addition_method():
-    """Демонстрация сложения продуктов"""
-    print("\n=== Демонстрация сложения продуктов ===\n")
-
-    # Создание продуктов
-    product1 = Product("Телефон", "Смартфон", 50000.0, 10)
-    product2 = Product("Ноутбук", "Игровой ноутбук", 100000.0, 5)
-
-    print(f"Продукт 1: {product1}")
-    print(f"Продукт 2: {product2}")
-
-    # Сложение продуктов
-    total_value = product1 + product2
-    print(f"\nСуммарная стоимость товаров на складе: {total_value} руб.")
-
-    # Демонстрация расчета
-    calculation = f"({product1.price} × {product1.quantity}) + ({product2.price} × {product2.quantity}) = {total_value}"
-    print(f"Расчет: {calculation}")
+    print("\n" + "=" * 50)
+    print("Газонная трава:")
+    print(lawn_grass)
+    print(f"\nТип: {type(lawn_grass)}")
+    print(f"Является ли Product: {isinstance(lawn_grass, Product)}")
 
 
-def demonstrate_json_loading():
-    """Демонстрация загрузки из JSON"""
-    print("\n=== Демонстрация загрузки из JSON ===\n")
+def demonstrate_addition_restrictions():
+    """Демонстрация ограничений сложения"""
+    print("\n=== Демонстрация ограничений сложения ===\n")
 
-    # Проверяем существование файла
-    json_path = Path("products.json")
-    if not json_path.exists():
-        print("Файл products.json не найден")
-        return
+    # Создание товаров одного типа
+    smartphone1 = Smartphone("Смартфон1", "Описание", 50000.0, 3, 2.5, "Модель1", 128, "черный")
+    smartphone2 = Smartphone("Смартфон2", "Описание", 70000.0, 2, 3.0, "Модель2", 256, "белый")
 
-    categories = load_data_from_json("products.json")
+    print("Сложение смартфонов:")
+    total_value = smartphone1 + smartphone2
+    print(f"Суммарная стоимость: {total_value} руб.")
 
-    if not categories:
-        print("Не удалось загрузить данные")
-        return
+    # Создание товаров разных типов
+    lawn_grass = LawnGrass("Трава", "Описание", 1500.0, 10, "Россия", 14, "зеленый")
 
-    for category in categories:
-        print(f"Категория: {category}")
-        print("Товары:")
-        print(category.products)
-        print()
+    print("\nПопытка сложить смартфон и газонную траву:")
+    try:
+        smartphone1 + lawn_grass
+    except TypeError as e:
+        print(f"Ошибка: {e}")
+
+
+def demonstrate_category_restrictions():
+    """Демонстрация ограничений добавления в категорию"""
+    print("\n=== Демонстрация ограничений добавления в категорию ===\n")
+
+    category = Category("Электроника", "Гаджеты и устройства")
+
+    # Успешное добавление продукта
+    smartphone = Smartphone("Смартфон", "Описание", 50000.0, 2, 2.5, "Модель", 128, "черный")
+    category.add_product(smartphone)
+    print("✓ Смартфон успешно добавлен в категорию")
+
+    # Попытка добавления неверного типа
+    print("\nПопытка добавить строку в категорию:")
+    try:
+        category.add_product("не продукт")
+    except TypeError as e:
+        print(f"Ошибка: {e}")
+
+    # Попытка добавления словаря
+    print("\nПопытка добавить словарь в категорию:")
+    try:
+        category.add_product({"name": "тест", "price": 100})
+    except TypeError as e:
+        print(f"Ошибка: {e}")
 
 
 def demonstrate_all_features():
     """Демонстрация всех новых функций"""
-    print("=" * 50)
-    print("ДЕМОНСТРАЦИЯ МАГИЧЕСКИХ МЕТОДОВ")
-    print("=" * 50)
+    print("=" * 60)
+    print("ДЕМОНСТРАЦИЯ КЛАССОВ-НАСЛЕДНИКОВ И ОГРАНИЧЕНИЙ")
+    print("=" * 60)
 
-    demonstrate_str_methods()
-    demonstrate_addition_method()
-    demonstrate_json_loading()
+    demonstrate_inheritance()
+    demonstrate_addition_restrictions()
+    demonstrate_category_restrictions()
 
 
 if __name__ == "__main__":
