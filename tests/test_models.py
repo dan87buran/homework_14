@@ -25,15 +25,15 @@ def create_test_json_file():
                     "efficiency": 2.5,
                     "model": "Galaxy S24",
                     "memory": 256,
-                    "color": "черный"
+                    "color": "черный",
                 }
-            ]
+            ],
         }
     ]
 
     json_path = project_root / "products.json"
 
-    with open(json_path, 'w', encoding='utf-8') as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(test_data, f, ensure_ascii=False, indent=2)
 
     return json_path
@@ -75,7 +75,7 @@ class TestSmartphone:
             efficiency=3.2,
             model="15 Pro",
             memory=512,
-            color="синий"
+            color="синий",
         )
 
         # Проверяем наследование от Product
@@ -105,7 +105,7 @@ class TestSmartphone:
             efficiency=3.2,
             model="15 Pro",
             memory=512,
-            color="синий"
+            color="синий",
         )
 
         smartphone_str = str(smartphone)
@@ -133,7 +133,7 @@ class TestLawnGrass:
             quantity=100,
             country="Германия",
             germination_period=14,
-            color="зеленый"
+            color="зеленый",
         )
 
         # Проверяем наследование от Product
@@ -161,7 +161,7 @@ class TestLawnGrass:
             quantity=100,
             country="Германия",
             germination_period=14,
-            color="зеленый"
+            color="зеленый",
         )
 
         lawn_grass_str = str(lawn_grass)

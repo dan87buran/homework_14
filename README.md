@@ -82,7 +82,32 @@
 - В категорию можно добавлять только объекты класса `Product` и его наследников
 - Используется `isinstance()` для проверки
 
-## Запуск тестов
+# E-commerce Core
+
+## Функциональность проекта
+
+### Домашнее задание 16.1
+- Реализованы классы-наследники: `Smartphone` и `LawnGrass`
+- Добавлены ограничения на сложение товаров разных типов
+- Реализованы проверки при добавлении продуктов в категории
+- Настроены линтеры flake8 и isort
+
+## Установка и запуск
+
+```bash
+# Установка зависимостей
+poetry install
+
+# Запуск линтеров
+poetry run flake8 src/ tests/ main.py
+poetry run isort src/ tests/ main.py
+
+# Запуск тестов
+poetry run pytest --cov=src --cov-report=html
+
+# Запуск основного кода
+poetry run python main.py
 
 ```bash
 pytest --cov=src --cov-report=html
+
