@@ -42,3 +42,5 @@ extend-exclude = '''
   | dist
 )/
 '''
+[tool.flake8]
+max-line-length = 120
