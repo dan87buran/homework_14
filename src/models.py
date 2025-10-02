@@ -11,16 +11,11 @@ class Product:
         """Строковое представление продукта."""
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
-    def __add__(self, other, something=None, SomeClass=None):
-        """
-        Магический метод сложения продуктов.
-
-        Возвращает сумму стоимости всех товаров на складе.
-        """
-        if isinstance(something, SomeClass):
-            raise TypeError("Нельзя складывать товары разных типов")
-
-        return (self.price * self.quantity) + (other.price * other.quantity)
+    def __add__(self, other):
+        """Сложение продуктов с проверкой типа класса."""
+        if type(self).__name__ != type(other).__name__:
+            raise TypeError("Нельзя складывать товары разных классов")
+        return self.price * self.quantity + other.price * other.quantity
 
     @property
     def price(self):
