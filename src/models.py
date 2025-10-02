@@ -1,7 +1,68 @@
-class Product:
-    """Базовый класс для представления товара в интернет-магазине."""
+from abc import ABC, abstractmethod
+
+
+class PrintObjectMixin:
+    """Миксин для вывода информации о создании объекта."""
+
+    def __init__(self, *args, **kwargs):
+        """Инициализация с выводом информации о создании объекта."""
+        # Сначала выводим информацию
+        class_name = self.__class__.__name__
+        str_args = []
+        for arg in args:
+            if isinstance(arg, str):
+                str_args.append(f"'{arg}'")
+            else:
+                str_args.append(str(arg))
+        params = ", ".join(str_args)
+        print(f"Создан объект {class_name}({params})")
+
+        # Затем вызываем следующий __init__ в MRO
+        super().__init__(*args, **kwargs)
+
+
+class BaseProduct(ABC):
+    """Абстрактный базовый класс для всех продуктов."""
+
+    @abstractmethod
+    def __init__(self, name: str, description: str, price: float, quantity: int):
+        pass
+
+    @abstractmethod
+    def __str__(self):
+        """Абстрактный метод для строкового представления."""
+        pass
+
+    @abstractmethod
+    def __add__(self, other):
+        """Абстрактный метод для сложения продуктов."""
+        pass
+
+    @property
+    @abstractmethod
+    def price(self):
+        """Абстрактный геттер для цены."""
+        pass
+
+    @price.setter
+    @abstractmethod
+    def price(self, value):
+        """Абстрактный сеттер для цены."""
+        pass
+
+    @classmethod
+    @abstractmethod
+    def new_product(cls, product_data: dict):
+        """Абстрактный класс-метод для создания продукта."""
+        pass
+
+
+class Product(PrintObjectMixin, BaseProduct):
+    """Класс для представления товара в интернет-магазине."""
 
     def __init__(self, name: str, description: str, price: float, quantity: int):
+        # Вызываем миксин и базовый класс через super()
+        super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
         self._price = price
@@ -12,10 +73,15 @@ class Product:
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other):
-        """Сложение продуктов с проверкой типа класса."""
-        if type(self).__name__ != type(other).__name__:
-            raise TypeError("Нельзя складывать товары разных классов")
-        return self.price * self.quantity + other.price * other.quantity
+        """
+        Магический метод сложения продуктов.
+
+        Возвращает сумму стоимости всех товаров на складе.
+        """
+        if type(self) is not type(other):  # Исправлено: is not вместо !=
+            raise TypeError("Нельзя складывать товары разных типов")
+
+        return (self.price * self.quantity) + (other.price * other.quantity)
 
     @property
     def price(self):
@@ -45,15 +111,15 @@ class Smartphone(Product):
     """Класс для представления смартфона. Наследуется от класса Product."""
 
     def __init__(
-        self,
-        name: str,
-        description: str,
-        price: float,
-        quantity: int,
-        efficiency: float,
-        model: str,
-        memory: int,
-        color: str,
+            self,
+            name: str,
+            description: str,
+            price: float,
+            quantity: int,
+            efficiency: float,
+            model: str,
+            memory: int,
+            color: str,
     ):
         super().__init__(name, description, price, quantity)
         self.efficiency = efficiency
@@ -73,14 +139,14 @@ class LawnGrass(Product):
     """Класс для представления газонной травы. Наследуется от класса Product."""
 
     def __init__(
-        self,
-        name: str,
-        description: str,
-        price: float,
-        quantity: int,
-        country: str,
-        germination_period: int,
-        color: str,
+            self,
+            name: str,
+            description: str,
+            price: float,
+            quantity: int,
+            country: str,
+            germination_period: int,
+            color: str,
     ):
         super().__init__(name, description, price, quantity)
         self.country = country
@@ -96,15 +162,27 @@ class LawnGrass(Product):
         )
 
 
-class Category:
+class BaseEntity(ABC):
+    """Абстрактный базовый класс для сущностей с общими свойствами."""
+
+    def __init__(self, name: str, description: str):
+        self.name = name
+        self.description = description
+
+    @abstractmethod
+    def __str__(self):
+        """Абстрактный метод для строкового представления."""
+        pass
+
+
+class Category(BaseEntity):
     """Класс для представления категории товаров в интернет-магазине."""
 
     category_count = 0
     product_count = 0
 
     def __init__(self, name: str, description: str, products: list = None):
-        self.name = name
-        self.description = description
+        super().__init__(name, description)
         self.__products = products if products is not None else []
 
         Category.category_count += 1
@@ -122,7 +200,9 @@ class Category:
         Проверяет, что добавляемый объект является продуктом или его наследником.
         """
         if not isinstance(product, Product):
-            raise TypeError("Можно добавлять только объекты класса Product или его наследников")
+            raise TypeError(
+                "Можно добавлять только объекты класса Product или его наследников"
+            )
 
         self.__products.append(product)
         Category.product_count += 1
@@ -142,6 +222,24 @@ class Category:
     def get_total_quantity(self):
         """Метод для получения общего количества товаров в категории."""
         return sum(product.quantity for product in self.__products)
+
+
+class Order(BaseEntity):
+    """Класс для представления заказа."""
+
+    def __init__(self, product: Product, quantity: int):
+        super().__init__(f"Заказ {product.name}", f"Заказ товара {product.name}")
+        self.product = product
+        self.quantity = quantity
+        self.total_price = product.price * quantity
+
+    def __str__(self):
+        """Строковое представление заказа."""
+        return (
+            f"Заказ: {self.product.name}\n"
+            f"Количество: {self.quantity}\n"
+            f"Итоговая стоимость: {self.total_price} руб."
+        )
 
 
 def load_data_from_json(filename: str = "products.json"):
