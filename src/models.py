@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 
 
+class ZeroQuantityError(Exception):
+    """Пользовательское исключение для товаров с нулевым количеством."""
+    pass
+
+
 class PrintObjectMixin:
     """Миксин для вывода информации о создании объекта."""
 
@@ -61,6 +66,10 @@ class Product(PrintObjectMixin, BaseProduct):
     """Класс для представления товара в интернет-магазине."""
 
     def __init__(self, name: str, description: str, price: float, quantity: int):
+        # Проверка на нулевое количество при инициализации
+        if quantity == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+
         # Вызываем миксин и базовый класс через super()
         super().__init__(name, description, price, quantity)
         self.name = name
@@ -78,7 +87,7 @@ class Product(PrintObjectMixin, BaseProduct):
 
         Возвращает сумму стоимости всех товаров на складе.
         """
-        if type(self) is not type(other):  # Исправлено: is not вместо !=
+        if type(self) is not type(other):
             raise TypeError("Нельзя складывать товары разных типов")
 
         return (self.price * self.quantity) + (other.price * other.quantity)
@@ -206,6 +215,19 @@ class Category(BaseEntity):
 
         self.__products.append(product)
         Category.product_count += 1
+
+    def average_price(self):
+        """
+        Метод для подсчета средней цены всех товаров в категории.
+
+        Возвращает:
+            float: Средняя цена товаров или 0, если товаров нет
+        """
+        try:
+            total_price = sum(product.price for product in self.__products)
+            return total_price / len(self.__products)
+        except ZeroDivisionError:
+            return 0
 
     @property
     def products(self):
