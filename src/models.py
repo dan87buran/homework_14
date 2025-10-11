@@ -1,267 +1,155 @@
 from abc import ABC, abstractmethod
 
 
+# Добавим недостающие классы
 class ZeroQuantityError(Exception):
     """Пользовательское исключение для товаров с нулевым количеством."""
     pass
 
 
-class PrintObjectMixin:
-    """Миксин для вывода информации о создании объекта."""
+class BaseEntity:
+    """Базовый класс для сущностей."""
+    pass
+
+
+class LoggingMixin:
+    """Миксин для логирования создания объектов."""
 
     def __init__(self, *args, **kwargs):
-        """Инициализация с выводом информации о создании объекта."""
-        # Сначала выводим информацию
-        class_name = self.__class__.__name__
-        str_args = []
-        for arg in args:
-            if isinstance(arg, str):
-                str_args.append(f"'{arg}'")
-            else:
-                str_args.append(str(arg))
-        params = ", ".join(str_args)
-        print(f"Создан объект {class_name}({params})")
-
-        # Затем вызываем следующий __init__ в MRO
+        # Вызываем следующий метод в MRO
         super().__init__(*args, **kwargs)
+        # Формируем строку для логирования
+        args_repr = [repr(arg) for arg in args]
+        kwargs_repr = [f"{key}={value!r}" for key, value in kwargs.items()]
+        all_args = ", ".join(args_repr + kwargs_repr)
+        # Исправляем вывод согласно тесту
+        print(f"Создан объект {self.__class__.__name__}({all_args})")
 
 
 class BaseProduct(ABC):
-    """Абстрактный базовый класс для всех продуктов."""
+    """Абстрактный базовый класс для продуктов."""
 
     @abstractmethod
-    def __init__(self, name: str, description: str, price: float, quantity: int):
+    def __init__(self, name, description, price, quantity):
         pass
 
     @abstractmethod
-    def __str__(self):
-        """Абстрактный метод для строкового представления."""
-        pass
-
-    @abstractmethod
-    def __add__(self, other):
-        """Абстрактный метод для сложения продуктов."""
-        pass
-
-    @property
-    @abstractmethod
-    def price(self):
-        """Абстрактный геттер для цены."""
-        pass
-
-    @price.setter
-    @abstractmethod
-    def price(self, value):
-        """Абстрактный сеттер для цены."""
-        pass
-
-    @classmethod
-    @abstractmethod
-    def new_product(cls, product_data: dict):
-        """Абстрактный класс-метод для создания продукта."""
+    def get_additional_info(self):
+        """Возвращает дополнительную информацию о продукте."""
         pass
 
 
-class Product(PrintObjectMixin, BaseProduct):
-    """Класс для представления товара в интернет-магазине."""
+class Product(LoggingMixin, BaseProduct):
+    """Класс продукта с наследованием от миксина и абстрактного класса."""
 
-    def __init__(self, name: str, description: str, price: float, quantity: int):
-        # Проверка на нулевое количество при инициализации
+    def __init__(self, name, description, price, quantity):
+        # Проверка на нулевое количество
         if quantity == 0:
             raise ValueError("Товар с нулевым количеством не может быть добавлен")
 
-        # Вызываем миксин и базовый класс через super()
-        super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
-        self._price = price
+        self.price = price
         self.quantity = quantity
+        # Вызов миксина должен быть в конце после инициализации атрибутов
+        super().__init__(name, description, price, quantity)
+
+    def __repr__(self):
+        return f"Product('{self.name}', '{self.description}', {self.price}, {self.quantity})"
 
     def __str__(self):
-        """Строковое представление продукта."""
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other):
-        """
-        Магический метод сложения продуктов.
+        """Сложение продуктов с проверкой типа класса."""
+        if type(self).__name__ != type(other).__name__:
+            raise TypeError("Нельзя складывать товары разных классов")
+        return self.price * self.quantity + other.price * other.quantity
 
-        Возвращает сумму стоимости всех товаров на складе.
-        """
-        if type(self) is not type(other):
-            raise TypeError("Нельзя складывать товары разных типов")
-
-        return (self.price * self.quantity) + (other.price * other.quantity)
-
-    @property
-    def price(self):
-        """Геттер для цены."""
-        return self._price
-
-    @price.setter
-    def price(self, new_price: float):
-        """Сеттер для цены с проверкой на положительное значение."""
-        if new_price <= 0:
-            print("Цена не должна быть нулевая или отрицательная")
-        else:
-            self._price = new_price
-
-    @classmethod
-    def new_product(cls, product_data: dict):
-        """Класс-метод для создания нового продукта из словаря."""
-        return cls(
-            name=product_data["name"],
-            description=product_data["description"],
-            price=product_data["price"],
-            quantity=product_data["quantity"],
-        )
+    def get_additional_info(self):
+        return {"type": "basic_product"}
 
 
 class Smartphone(Product):
-    """Класс для представления смартфона. Наследуется от класса Product."""
+    """Класс смартфона."""
 
-    def __init__(
-            self,
-            name: str,
-            description: str,
-            price: float,
-            quantity: int,
-            efficiency: float,
-            model: str,
-            memory: int,
-            color: str,
-    ):
-        super().__init__(name, description, price, quantity)
-        self.efficiency = efficiency
+    def __init__(self, name, description, price, quantity, performance, model, memory, color):
+        self.performance = performance
         self.model = model
         self.memory = memory
         self.color = color
+        # Вызов конструктора родительского класса
+        super().__init__(name, description, price, quantity)
 
-    def __str__(self):
-        """Строковое представление смартфона."""
-        return (
-            f"{self.name} {self.model}, {self.price} руб. Остаток: {self.quantity} шт.\n"
-            f"Характеристики: {self.memory}ГБ, {self.color}, производительность: {self.efficiency}"
-        )
+    def __repr__(self):
+        return (f"Smartphone('{self.name}', '{self.description}', {self.price}, {self.quantity}, "
+                f"'{self.performance}', '{self.model}', '{self.memory}', '{self.color}')")
+
+    def get_additional_info(self):
+        return {
+            "performance": self.performance,
+            "model": self.model,
+            "memory": self.memory,
+            "color": self.color
+        }
 
 
 class LawnGrass(Product):
-    """Класс для представления газонной травы. Наследуется от класса Product."""
+    """Класс газонной травы."""
 
-    def __init__(
-            self,
-            name: str,
-            description: str,
-            price: float,
-            quantity: int,
-            country: str,
-            germination_period: int,
-            color: str,
-    ):
-        super().__init__(name, description, price, quantity)
+    def __init__(self, name, description, price, quantity, country, germination_period, color):
         self.country = country
         self.germination_period = germination_period
         self.color = color
+        # Вызов конструктора родительского класса
+        super().__init__(name, description, price, quantity)
 
-    def __str__(self):
-        """Строковое представление газонной травы."""
-        return (
-            f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт.\n"
-            f"Характеристики: {self.country}, срок прорастания: "
-            f"{self.germination_period} дней, цвет: {self.color}"
-        )
+    def __repr__(self):
+        return (f"LawnGrass('{self.name}', '{self.description}', {self.price}, {self.quantity}, "
+                f"'{self.country}', '{self.germination_period}', '{self.color}')")
+
+    def get_additional_info(self):
+        return {
+            "country": self.country,
+            "germination_period": self.germination_period,
+            "color": self.color
+        }
 
 
-class BaseEntity(ABC):
-    """Абстрактный базовый класс для сущностей с общими свойствами."""
+class Category(BaseEntity):  # Наследуем от BaseEntity
+    """Класс категории товаров."""
 
-    def __init__(self, name: str, description: str):
+    def __init__(self, name, description, products=None):
         self.name = name
         self.description = description
-
-    @abstractmethod
-    def __str__(self):
-        """Абстрактный метод для строкового представления."""
-        pass
-
-
-class Category(BaseEntity):
-    """Класс для представления категории товаров в интернет-магазине."""
-
-    category_count = 0
-    product_count = 0
-
-    def __init__(self, name: str, description: str, products: list = None):
-        super().__init__(name, description)
         self.__products = products if products is not None else []
 
-        Category.category_count += 1
-        Category.product_count += len(self.__products)
+    @property
+    def products(self):
+        return self.__products
 
-    def __str__(self):
-        """Строковое представление категории."""
-        total_quantity = sum(product.quantity for product in self.__products)
-        return f"{self.name}, количество продуктов: {total_quantity} шт."
-
-    def add_product(self, product):
-        """
-        Метод для добавления продукта в категорию.
-
-        Проверяет, что добавляемый объект является продуктом или его наследником.
-        """
-        if not isinstance(product, Product):
-            raise TypeError(
-                "Можно добавлять только объекты класса Product или его наследников"
-            )
-
-        self.__products.append(product)
-        Category.product_count += 1
+    def get_products_list(self):
+        """Метод для получения списка продуктов (для совместимости с тестами)."""
+        return self.__products
 
     def average_price(self):
-        """
-        Метод для подсчета средней цены всех товаров в категории.
-
-        Возвращает:
-            float: Средняя цена товаров или 0, если товаров нет
-        """
+        """Подсчет среднего ценника всех товаров в категории (для совместимости с тестами)."""
         try:
             total_price = sum(product.price for product in self.__products)
             return total_price / len(self.__products)
         except ZeroDivisionError:
             return 0
 
-    @property
-    def products(self):
-        """Геттер для списка продуктов в формате строк."""
-        products_str = ""
-        for product in self.__products:
-            products_str += f"{product}\n"
-        return products_str.strip()
-
-    def get_products_list(self):
-        """Метод для получения списка объектов продуктов."""
-        return self.__products
-
-    def get_total_quantity(self):
-        """Метод для получения общего количества товаров в категории."""
-        return sum(product.quantity for product in self.__products)
-
-
-class Order(BaseEntity):
-    """Класс для представления заказа."""
-
-    def __init__(self, product: Product, quantity: int):
-        super().__init__(f"Заказ {product.name}", f"Заказ товара {product.name}")
-        self.product = product
-        self.quantity = quantity
-        self.total_price = product.price * quantity
+    def middle_price(self):
+        """Подсчет среднего ценника всех товаров в категории."""
+        try:
+            total_price = sum(product.price for product in self.__products)
+            return total_price / len(self.__products)
+        except ZeroDivisionError:
+            return 0
 
     def __str__(self):
-        """Строковое представление заказа."""
-        return (
-            f"Заказ: {self.product.name}\n"
-            f"Количество: {self.quantity}\n"
-            f"Итоговая стоимость: {self.total_price} руб."
-        )
+        return f"{self.name}, количество продуктов: {len(self.__products)}"
 
 
 def load_data_from_json(filename: str = "products.json"):
@@ -291,18 +179,23 @@ def load_data_from_json(filename: str = "products.json"):
     for category_data in data:
         products = []
         for product_data in category_data.get("products", []):
-            if "efficiency" in product_data and "model" in product_data:
+            # Проверяем наличие полей для разных типов продуктов
+            # Обратите внимание: в JSON поле называется "efficiency", а не "performance"
+            has_smartphone_fields = all(field in product_data for field in ["efficiency", "model", "memory", "color"])
+            has_lawn_grass_fields = all(field in product_data for field in ["country", "germination_period", "color"])
+
+            if has_smartphone_fields:
                 product = Smartphone(
                     name=product_data["name"],
                     description=product_data["description"],
                     price=product_data["price"],
                     quantity=product_data["quantity"],
-                    efficiency=product_data["efficiency"],
+                    performance=product_data["efficiency"],  # Используем efficiency как performance
                     model=product_data["model"],
                     memory=product_data["memory"],
                     color=product_data["color"],
                 )
-            elif "country" in product_data and "germination_period" in product_data:
+            elif has_lawn_grass_fields:
                 product = LawnGrass(
                     name=product_data["name"],
                     description=product_data["description"],
@@ -313,14 +206,18 @@ def load_data_from_json(filename: str = "products.json"):
                     color=product_data["color"],
                 )
             else:
-                product = Product.new_product(product_data)
-
+                product = Product(
+                    name=product_data["name"],
+                    description=product_data["description"],
+                    price=product_data["price"],
+                    quantity=product_data["quantity"],
+                )
             products.append(product)
 
         category = Category(
             name=category_data["name"],
             description=category_data["description"],
-            products=products,
+            products=products
         )
         categories.append(category)
 
